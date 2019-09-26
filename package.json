@@ -1,0 +1,13 @@
+{
+  "name": "sinon",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "sinon": "^7.5.0"
+  },
+  "scripts": {
+    "start": "node server"
+  }
+}

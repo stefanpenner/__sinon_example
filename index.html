@@ -1,0 +1,50 @@
+<script type="module">
+  import sinon from './node_modules/sinon/pkg/sinon-esm.js';
+
+  // pass in console, so that it can be easily spy'd or mocked in your tests, without poluting the globals
+  function registerHost(xhr, hostname, console) {
+    // Only register if it's a local host.
+    if (hostname.includes('FOO')) {
+      xhr.open("POST", '/BAR', false);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === '200') {
+            var response = JSON.parse(xhr.responseText);
+
+            if (response['allowed'] !== true) {
+              console.log('warning: '+ response['error_message']);
+            } else {
+              console.log('info: Host registered for local-dev access by SuperGrid')
+            }
+          } else {
+            console.log(
+              'warning: \'Local-dev access to supergrid-blue may not work due an internal error during auto-registering.'
+              + '  \'Please reach out to supergrid-dev@linkedin.com if you need help.');
+          }
+        }
+      };
+
+      var data = JSON.stringify({"hostname": hostname});
+      xhr.send(data);
+    }
+  }
+
+  const server = sinon.createFakeServer();
+
+  try {
+    // setup
+    const xhr = new XMLHttpRequest();
+    const log = sinon.spy();
+
+    // scenario 1
+    registerHost(xhr, 'FOO', { log })
+    server.respondWith('GET', '/BAR', [200, {}, JSON.stringify({ allowed: false })]);
+
+    // example assertions (use your test suite)
+    document.body.append(log.args[0] === `warning: 'Local-dev access to supergrid-blue may n…t to supergrid-dev@linkedin.com if you need help.`);
+  } finally {
+    // be sure to restore the global XMLHttpRequest
+    server.restore();
+  }
+</script>
